@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>封面设计生成器 | 小红书与公众号</title>
+    <!-- 引入字体 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&display=swap">
+    <!-- TailwindCSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2canvas 用于导出图片 -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=Noto+Serif+SC:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', 'Noto Serif SC', sans-serif;
+        }
+        
+        .cover-container {
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        
+        .xiaohongshu-ratio {
+            width: 540px;
+            height: 720px;
+        }
+        
+        .official-account-ratio {
+            width: 900px;
+            height: 383px;
+        }
+        
+        .main-title {
+            font-family: 'Noto Serif SC', serif;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+        
+        .sub-title {
+            font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 300;
+            line-height: 1.4;
+        }
+        
+        .accent-element {
+            position: absolute;
+            z-index: 0;
+        }
+        
+        .content-wrapper {
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* 自定义颜色方案 */
+        .scheme-a {
+            background-color: #FFFFFF;
+            color: #111111;
+        }
+        
+        .scheme-b {
+            background-color: #FF6B00;
+            color: #FFFFFF;
+        }
+        
+        .scheme-c {
+            background-color: #002FA7;
+            color: #FFFFFF;
+        }
+        
+        .accent-yellow {
+            color: #FFF000;
+        }
+        
+        .highlight-bar {
+            height: 12px;
+            width: 100%;
+        }
+        
+        /* 公众号封面特定样式 */
+        .official-account .main-title {
+            font-size: 3.5rem;
+        }
+        
+        .official-account .sub-title {
+            font-size: 1.5rem;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 1024px) {
+            .official-account-ratio {
+                width: 720px;
+                height: 306px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .xiaohongshu-ratio {
+                width: 405px;
+                height: 540px;
+            }
+            
+            .official-account-ratio {
+                width: 540px;
+                height: 230px;
+            }
+            
+            .official-account .main-title {
+                font-size: 2.5rem;
+            }
+            
+            .official-account .sub-title {
+                font-size: 1.2rem;
+            }
+        }
+        .cover-container {
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,.08);
+        }
+        .scheme-a {
+            background: linear-gradient(180deg, #FFFFFF 0%, #F7F7F7 100%);
+            color: #111111;
+        }
+        .scheme-b {
+            background: linear-gradient(135deg, #FF6B00 0%, #FF8740 100%);
+            color: #FFFFFF;
+        }
+        .scheme-c {
+            background: linear-gradient(135deg, #002FA7 0%, #0050FF 100%);
+            color: #FFFFFF;
+        }
+        .main-title {
+            letter-spacing: -0.02em;
+        }
+        .highlight-bar {
+            height: 14px;
+            border-radius: 9999px;
+        }
+        .brand-pill {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            background: rgba(255,255,255,.6);
+            border: 1px solid rgba(0,0,0,.06);
+            backdrop-filter: saturate(180%) blur(8px);
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 20;
+        }
+        .draggable {
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center p-4 md:p-8">
+    <div class="max-w-6xl w-full">
+        <h1 class="text-3xl md:text-4xl font-black text-center mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-pink-600 to-orange-500">封面设计生成器</h1>
+        <p class="text-center text-gray-500 mb-2">作者：Tian-Timm</p>
+        <p class="text-center text-gray-600 mb-8">高对比度情绪排版设计 · 支持小红书与公众号封面</p>
+        
+        <!-- 控制面板 -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">平台类型</label>
+                    <div class="flex space-x-4">
+                        <button id="platformXhs" class="px-4 py-2 bg-indigo-100 border border-indigo-300 rounded-full shadow-sm text-sm font-medium text-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition platform-btn active">小红书</button>
+                        <button id="platformOfficial" class="px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition platform-btn">公众号</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">配色方案</label>
+                    <div class="flex space-x-2 flex-wrap">
+                        <button id="schemeA" class="px-3 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition scheme-btn active">A方案(白底黑字)</button>
+                        <button id="schemeB" class="px-3 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition scheme-btn">B方案(橙色底)</button>
+                        <button id="schemeC" class="px-3 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition scheme-btn">C方案(蓝色底)</button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">内容模板</label>
+                    <select id="contentTemplate" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="fashion">时尚美妆类</option>
+                        <option value="lifestyle">生活方式类</option>
+                        <option value="knowledge">知识干货类</option>
+                        <option value="official">公众号文章类</option>
+                        <option value="custom">自定义内容</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="mainTitle" class="block text-sm font-medium text-gray-700 mb-2">主标题</label>
+                    <input type="text" id="mainTitle" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border" value="2025秋冬穿搭拒绝平庸" />
+                    
+                    <label for="subTitle" class="block text-sm font-medium text-gray-700 mt-4 mb-2">副标题/情绪钩子</label>
+                    <input type="text" id="subTitle" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2 border" value="这3件单品让你从路人变焦点" />
+                </div>
+                
+                <div>
+                    <label for="accentElement" class="block text-sm font-medium text-gray-700 mb-2">视觉锚点样式</label>
+                    <select id="accentElement" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="underline">强调下划线</option>
+                        <option value="highlight">高亮色块</option>
+                        <option value="circle">圆形焦点</option>
+                        <option value="none">无装饰元素</option>
+                    </select>
+                    
+                    <label for="textAlignment" class="block text-sm font-medium text-gray-700 mt-4 mb-2">文本对齐方式</label>
+                    <select id="textAlignment" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="center">居中对齐</option>
+                        <option value="left">左上对齐</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="imageUpload" class="block text-sm font-medium text-gray-700 mb-2">上传图片到封面</label>
+                    <input type="file" id="imageUpload" accept="image/*" class="mt-1 block w-full text-sm" />
+                </div>
+                <div class="flex items-end">
+                    <button id="addImageBtn" class="px-4 py-2 bg-white border border-gray-300 rounded-full shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">添加到封面</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 封面预览区域 -->
+        <div class="bg-gray-200 p-4 md:p-6 rounded-lg shadow-inner mb-6 flex justify-center overflow-auto">
+            <div id="coverPreview" class="cover-container xiaohongshu-ratio scheme-a">
+                <div class="content-wrapper w-full h-full flex flex-col justify-center p-8 md:p-16 text-center">
+                    <h1 id="previewMainTitle" class="main-title text-6xl md:text-7xl mb-4 md:mb-6 leading-tight draggable">2025秋冬穿搭拒绝平庸</h1>
+                    <p id="previewSubTitle" class="sub-title text-lg md:text-xl mb-6 md:mb-8 draggable">这3件单品让你从路人变焦点</p>
+                    <div id="previewAccent" class="highlight-bar mt-4 mx-auto draggable" style="width: 80%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="flex justify-center space-x-4">
+            <button id="exportBtn" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">导出为PNG图片</button>
+            <button id="resetBtn" class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">重置为默认</button>
+        </div>
+        
+        <div class="mt-8 text-sm text-gray-500">
+            <p>设计提示：</p>
+            <ul class="list-disc pl-5 mt-2 space-y-1">
+                <li>小红书封面比例3:4，公众号封面比例2.35:1</li>
+                <li>主标题应占据封面40%-60%的空间，使用粗重字体增强视觉冲击力</li>
+                <li>通过高对比度色彩和简洁排版制造情绪抓手，避免信息过载</li>
+                <li>留白是设计的关键，让内容有呼吸感，提高可读性</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const platformXhsButton = document.getElementById('platformXhs');
+        const platformOfficialButton = document.getElementById('platformOfficial');
+        const schemeAButton = document.getElementById('schemeA');
+        const schemeBButton = document.getElementById('schemeB');
+        const schemeCButton = document.getElementById('schemeC');
+        const contentTemplate = document.getElementById('contentTemplate');
+        const mainTitleInput = document.getElementById('mainTitle');
+        const subTitleInput = document.getElementById('subTitle');
+        const accentElement = document.getElementById('accentElement');
+        const textAlignment = document.getElementById('textAlignment');
+        const coverPreview = document.getElementById('coverPreview');
+        const previewMainTitle = document.getElementById('previewMainTitle');
+        const previewSubTitle = document.getElementById('previewSubTitle');
+        const previewAccent = document.getElementById('previewAccent');
+        const exportBtn = document.getElementById('exportBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const imageUpload = document.getElementById('imageUpload');
+        const addImageBtn = document.getElementById('addImageBtn');
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置默认平台和方案为激活状态
+            platformXhsButton.classList.add('active');
+            schemeAButton.classList.add('active');
+            
+            // 添加内容模板
+            setupContentTemplates();
+            
+            // 绑定事件
+            bindEvents();
+            makeDraggable(previewMainTitle);
+            makeDraggable(previewSubTitle);
+            makeDraggable(previewAccent);
+        });
+        
+        function setupContentTemplates() {
+            const templates = {
+                fashion: {
+                    mainTitle: "2025秋冬穿搭拒绝平庸",
+                    subTitle: "这3件单品让你从路人变焦点"
+                },
+                lifestyle: {
+                    mainTitle: "极简生活让我更自由",
+                    subTitle: "减少50%物品后的惊人变化"
+                },
+                knowledge: {
+                    mainTitle: "时间管理的5个误区",
+                    subTitle: "90%的人第一个就中了"
+                },
+                official: {
+                    mainTitle: "数字化转型的关键策略",
+                    subTitle: "企业如何在变革中保持竞争力"
+                },
+                custom: {
+                    mainTitle: "",
+                    subTitle: ""
+                }
+            };
+            
+            contentTemplate.addEventListener('change', function() {
+                if (this.value !== 'custom') {
+                    mainTitleInput.value = templates[this.value].mainTitle;
+                    subTitleInput.value = templates[this.value].subTitle;
+                    updatePreview();
+                }
+            });
+        }
+        
+        function bindEvents() {
+            // 平台切换
+            platformXhsButton.addEventListener('click', function() {
+                coverPreview.className = 'cover-container xiaohongshu-ratio scheme-a';
+                coverPreview.classList.remove('official-account');
+                updateButtonActiveState(platformXhsButton, platformOfficialButton);
+                updatePreview();
+            });
+            
+            platformOfficialButton.addEventListener('click', function() {
+                coverPreview.className = 'cover-container official-account-ratio scheme-a official-account';
+                updateButtonActiveState(platformOfficialButton, platformXhsButton);
+                updatePreview();
+            });
+            
+            // 配色方案切换
+            schemeAButton.addEventListener('click', function() {
+                updateColorScheme('scheme-a');
+                updateButtonActiveState(schemeAButton, [schemeBButton, schemeCButton]);
+            });
+            
+            schemeBButton.addEventListener('click', function() {
+                updateColorScheme('scheme-b');
+                updateButtonActiveState(schemeBButton, [schemeAButton, schemeCButton]);
+            });
+            
+            schemeCButton.addEventListener('click', function() {
+                updateColorScheme('scheme-c');
+                updateButtonActiveState(schemeCButton, [schemeAButton, schemeBButton]);
+            });
+            
+            // 内容更新
+            mainTitleInput.addEventListener('input', updatePreview);
+            subTitleInput.addEventListener('input', updatePreview);
+            
+            // 视觉元素更新
+            accentElement.addEventListener('change', updateAccentElement);
+            textAlignment.addEventListener('change', updateTextAlignment);
+            
+            // 按钮事件
+            exportBtn.addEventListener('click', exportAsPNG);
+            resetBtn.addEventListener('click', resetToDefault);
+            addImageBtn.addEventListener('click', addImageToCover);
+        }
+
+        function makeDraggable(el) {
+            if (!el || el.dataset.dragAttached === 'true') return;
+            el.dataset.dragAttached = 'true';
+            let startX = 0, startY = 0;
+            let originX = parseFloat(el.dataset.dx || '0');
+            let originY = parseFloat(el.dataset.dy || '0');
+            const baseTransform = window.getComputedStyle(el).transform === 'none' ? '' : window.getComputedStyle(el).transform;
+            el.dataset.baseTransform = baseTransform;
+
+            const onPointerDown = (e) => {
+                el.setPointerCapture && el.setPointerCapture(e.pointerId);
+                startX = e.clientX;
+                startY = e.clientY;
+                originX = parseFloat(el.dataset.dx || '0');
+                originY = parseFloat(el.dataset.dy || '0');
+                document.addEventListener('pointermove', onPointerMove);
+                document.addEventListener('pointerup', onPointerUp, { once: true });
+            };
+            const onPointerMove = (e) => {
+                const dx = originX + (e.clientX - startX);
+                const dy = originY + (e.clientY - startY);
+                el.dataset.dx = String(dx);
+                el.dataset.dy = String(dy);
+                const base = el.dataset.baseTransform || '';
+                el.style.transform = `${base} translate(${dx}px, ${dy}px)`;
+            };
+            const onPointerUp = () => {
+                document.removeEventListener('pointermove', onPointerMove);
+            };
+            el.addEventListener('pointerdown', onPointerDown);
+        }
+        
+        function updateButtonActiveState(activeButton, inactiveButtons) {
+            // 确保inactiveButtons是数组
+            if (!Array.isArray(inactiveButtons)) {
+                inactiveButtons = [inactiveButtons];
+            }
+            
+            // 移除所有相关按钮的active类
+            activeButton.classList.remove('active', 'bg-indigo-100', 'border-indigo-300', 'text-indigo-700');
+            inactiveButtons.forEach(btn => {
+                btn.classList.remove('active', 'bg-indigo-100', 'border-indigo-300', 'text-indigo-700');
+            });
+            
+            // 添加active类到当前按钮
+            activeButton.classList.add('active', 'bg-indigo-100', 'border-indigo-300', 'text-indigo-700');
+            
+            // 确保非活动按钮有正确的样式
+            inactiveButtons.forEach(btn => {
+                btn.classList.add('bg-white', 'border-gray-300', 'text-gray-700');
+            });
+        }
+        
+        function updateColorScheme(scheme) {
+            // 保存当前平台和比例类
+            const isOfficial = coverPreview.classList.contains('official-account-ratio');
+            const platformClass = isOfficial ? 'official-account-ratio' : 'xiaohongshu-ratio';
+            const officialClass = isOfficial ? 'official-account' : '';
+            
+            // 更新颜色方案
+            coverPreview.className = `cover-container ${platformClass} ${scheme} ${officialClass}`;
+            
+            // 更新强调色
+            updateAccentElement();
+        }
+        
+        function updatePreview() {
+            previewMainTitle.textContent = mainTitleInput.value;
+            previewSubTitle.textContent = subTitleInput.value;
+            
+            // 根据平台调整字体大小
+            if (coverPreview.classList.contains('official-account')) {
+                previewMainTitle.className = 'main-title text-4xl md:text-5xl lg:text-6xl mb-4 md:mb-6 leading-tight draggable';
+                previewSubTitle.className = 'sub-title text-base md:text-lg lg:text-xl mb-6 md:mb-8 draggable';
+            } else {
+                previewMainTitle.className = 'main-title text-5xl md:text-7xl mb-4 md:mb-6 leading-tight draggable';
+                previewSubTitle.className = 'sub-title text-lg md:text-xl mb-6 md:mb-8 draggable';
+            }
+            makeDraggable(previewMainTitle);
+            makeDraggable(previewSubTitle);
+        }
+        
+        function updateAccentElement() {
+            // 清除现有样式
+            previewAccent.className = '';
+            previewAccent.innerHTML = '';
+            previewAccent.style.cssText = '';
+            
+            // 获取当前颜色方案
+            let accentStart = '#FF6B00';
+            let accentEnd = '#FFD4A3';
+            if (coverPreview.classList.contains('scheme-a')) {
+                accentStart = '#FF6B00';
+                accentEnd = '#FFD4A3';
+            } else if (coverPreview.classList.contains('scheme-b')) {
+                accentStart = '#FFF000';
+                accentEnd = '#FFE066';
+            } else if (coverPreview.classList.contains('scheme-c')) {
+                accentStart = '#FFF000';
+                accentEnd = '#FFE066';
+            }
+            
+            switch(accentElement.value) {
+                case 'underline':
+                    previewAccent.className = 'highlight-bar mt-4 mx-auto';
+                    previewAccent.style.backgroundImage = `linear-gradient(90deg, ${accentStart} 0%, ${accentEnd} 100%)`;
+                    previewAccent.style.width = '80%';
+                    previewAccent.style.height = '14px';
+                    previewAccent.style.display = 'block';
+                    previewAccent.classList.add('draggable');
+                    break;
+                case 'highlight':
+                    previewAccent.className = 'absolute inset-0 opacity-10';
+                    previewAccent.style.backgroundImage = `linear-gradient(180deg, ${accentStart} 0%, ${accentEnd} 100%)`;
+                    previewAccent.style.width = '100%';
+                    previewAccent.style.height = '60%';
+                    previewAccent.style.top = '20%';
+                    previewAccent.style.zIndex = '0';
+                    previewAccent.style.display = 'block';
+                    previewAccent.classList.add('draggable');
+                    break;
+                case 'circle':
+                    previewAccent.className = 'rounded-full absolute';
+                    previewAccent.style.width = '200px';
+                    previewAccent.style.height = '200px';
+                    previewAccent.style.backgroundColor = accentStart;
+                    previewAccent.style.opacity = '0.2';
+                    previewAccent.style.top = '50%';
+                    previewAccent.style.left = '50%';
+                    previewAccent.style.transform = 'translate(-50%, -50%)';
+                    previewAccent.style.zIndex = '0';
+                    previewAccent.style.display = 'block';
+                    previewAccent.classList.add('draggable');
+                    break;
+                case 'none':
+                    previewAccent.style.display = 'none';
+                    break;
+            }
+            makeDraggable(previewAccent);
+        }
+
+        function addImageToCover() {
+            const file = imageUpload.files && imageUpload.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = 'draggable';
+            img.style.position = 'absolute';
+            img.style.top = '50%';
+            img.style.left = '50%';
+            img.style.transform = 'translate(-50%, -50%)';
+            img.style.maxWidth = '80%';
+            img.style.height = 'auto';
+            img.style.borderRadius = '12px';
+            img.style.boxShadow = '0 10px 20px rgba(0,0,0,.2)';
+            img.style.zIndex = '5';
+            coverPreview.appendChild(img);
+            img.onload = () => {
+                makeDraggable(img);
+            };
+        }
+        
+        function updateTextAlignment() {
+            const contentWrapper = coverPreview.querySelector('.content-wrapper');
+            if (textAlignment.value === 'center') {
+                contentWrapper.className = 'content-wrapper w-full h-full flex flex-col justify-center p-8 md:p-16 text-center';
+            } else {
+                contentWrapper.className = 'content-wrapper w-full h-full flex flex-col justify-center p-8 md:p-16 text-left';
+            }
+        }
+        
+        function exportAsPNG() {
+            // 根据平台设置导出尺寸
+            let exportWidth, exportHeight;
+            if (coverPreview.classList.contains('official-account')) {
+                exportWidth = 900;
+                exportHeight = 383;
+            } else {
+                exportWidth = 1080;
+                exportHeight = 1440;
+            }
+            
+            // 计算缩放比例
+            const scale = exportWidth / coverPreview.offsetWidth;
+            
+            html2canvas(coverPreview, {
+                backgroundColor: getBackgroundColor(),
+                scale: scale,
+                width: exportWidth,
+                height: exportHeight,
+                windowWidth: exportWidth,
+                windowHeight: exportHeight
+            }).then(canvas => {
+                const link = document.createElement('a');
+                const platform = coverPreview.classList.contains('official-account') ? 'official-account' : 'xiaohongshu';
+                link.download = `cover-${platform}-${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+        
+        function getBackgroundColor() {
+            if (coverPreview.classList.contains('scheme-a')) {
+                return '#FFFFFF';
+            } else if (coverPreview.classList.contains('scheme-b')) {
+                return '#FF6B00';
+            } else if (coverPreview.classList.contains('scheme-c')) {
+                return '#002FA7';
+            }
+            return '#FFFFFF';
+        }
+        
+        function resetToDefault() {
+            // 重置表单值
+            contentTemplate.value = 'fashion';
+            mainTitleInput.value = '2025秋冬穿搭拒绝平庸';
+            subTitleInput.value = '这3件单品让你从路人变焦点';
+            accentElement.value = 'underline';
+            textAlignment.value = 'center';
+            
+            // 重置平台和配色
+            platformXhsButton.click();
+            schemeAButton.click();
+            
+            // 重置预览
+            updatePreview();
+            updateAccentElement();
+            updateTextAlignment();
+        }
+        
+        // 初始更新
+        updateAccentElement();
+    </script>
+</body>
+</html>
